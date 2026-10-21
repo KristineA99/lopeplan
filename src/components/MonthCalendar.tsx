@@ -13,11 +13,16 @@ interface Props {
   onChangeMonth: (year: number, month: number) => void;
   onPressDay?: (iso: string) => void;
   /** Farge som skal markeres på en dato, f.eks. { '2027-01-05': '#4C9AFF' } */
-  markers?: Record<string, { color: string; done?: boolean }>;
+  markers?: Record<string, Marker>;
   selected?: string;
   today?: string;
   /** Datoer før denne kan ikke trykkes på. */
   minDate?: string;
+}
+
+export interface Marker {
+  color: string;
+  status?: 'done' | 'skipped';
 }
 
 const pad = (n: number) => String(n).padStart(2, '0');
@@ -75,7 +80,7 @@ export function MonthCalendar({
                   style={[
                     styles.dayCircle,
                     marker && { backgroundColor: marker.color },
-                    marker?.done && styles.done,
+                    marker?.status && styles.done,
                     isSelected && styles.selected,
                     isToday && !marker && !isSelected && styles.today,
                   ]}>
@@ -89,7 +94,8 @@ export function MonthCalendar({
                     {Number(iso.slice(8))}
                   </Text>
                 </View>
-                {marker?.done && <Text style={styles.check}>✓</Text>}
+                {marker?.status === 'done' && <Text style={styles.check}>✓</Text>}
+                {marker?.status === 'skipped' && <Text style={[styles.check, { color: '#9CA3AF' }]}>✕</Text>}
               </Pressable>
             );
           })}

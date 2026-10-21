@@ -38,11 +38,12 @@ function paceFor(type: SessionType, racePace?: number): string | undefined {
 
 const round05 = (km: number) => Math.max(0.5, Math.round(km * 2) / 2);
 
-export function gaaJogg(progress: number): WorkoutContent {
+export function gaaJogg(progress: number, totalMin?: number): WorkoutContent {
   // progress 0 → 1 gjennom nybegynnerfasen
   const jog = Math.round(1 + progress * 4); // 1 → 5 min jogg
   const walk = progress < 0.5 ? 2 : 1; // 2 → 1 min gange
-  const rounds = Math.max(5, Math.round(24 / (jog + walk)));
+  const mainMin = totalMin ? Math.max(10, totalMin - 10) : 24;
+  const rounds = Math.max(3, Math.round(mainMin / (jog + walk)));
   return {
     type: 'gaa_jogg',
     title: 'Gå/jogg',
@@ -141,4 +142,33 @@ export function konkurranse(goalKm: number, racePace?: number): WorkoutContent {
     cooldown: 'Gå rolig, drikk og nyt det',
     tip: 'Ikke prøv noe nytt i dag – samme sko, klær og frokost som på trening.',
   };
+}
+
+/**
+ * Lager innholdet til en økt ut fra type og mengde.
+ * Brukes når brukeren endrer en økt selv.
+ */
+export function contentFor(
+  type: SessionType,
+  amount: { km?: number; minutes?: number },
+  goalKm: number,
+  racePace?: number,
+): WorkoutContent {
+  const km = amount.km ?? 5;
+  switch (type) {
+    case 'gaa_jogg':
+      return gaaJogg(0.5, amount.minutes ?? 35);
+    case 'rolig':
+      return rolig(km, racePace);
+    case 'langtur':
+      return langtur(km, racePace);
+    case 'intervall':
+      return intervall(km, goalKm, racePace);
+    case 'tempo':
+      return tempo(km, racePace);
+    case 'bakke':
+      return bakke(km);
+    case 'konkurranse':
+      return konkurranse(goalKm, racePace);
+  }
 }

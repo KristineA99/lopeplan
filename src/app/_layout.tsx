@@ -22,6 +22,8 @@ export default function RootLayout() {
         <Stack.Screen name="mal" options={{ title: 'Ditt mål' }} />
         <Stack.Screen name="forslag" options={{ title: 'Forslag til plan' }} />
         <Stack.Screen name="okt/[dato]" options={{ title: 'Økt' }} />
+        <Stack.Screen name="rediger/[id]" options={{ title: 'Endre økt', presentation: 'modal' }} />
+        <Stack.Screen name="innstillinger" options={{ title: 'Innstillinger' }} />
       </Stack>
     </PlanProvider>
   );
