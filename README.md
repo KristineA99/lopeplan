@@ -1,3 +1,6 @@
+## DEMO
+**▶️ Prøv appen:** https://kristinea99.github.io/lopeplan/
+
 # Løpeplan – din personlige treningsplan
 
 En enkel mobilapp som gjør det lettere å nå løpemålene dine. Du sier hva du vil klare og innen når, så lager appen en treningsplan og legger øktene rett inn i en kalender.
