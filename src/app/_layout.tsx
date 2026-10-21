@@ -1,18 +1,28 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from 'expo-router';
-import * as SplashScreen from 'expo-splash-screen';
-import { useColorScheme } from 'react-native';
+// Rammen rundt alle skjermene: navigasjon + felles plan-hukommelse.
+import { Stack } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
 
-import { AnimatedSplashOverlay } from '@/components/animated-icon';
-import AppTabs from '@/components/app-tabs';
+import { colors } from '@/components/theme';
+import { PlanProvider } from '@/state/PlanContext';
 
-SplashScreen.preventAutoHideAsync();
-
-export default function TabLayout() {
-  const colorScheme = useColorScheme();
+export default function RootLayout() {
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <AnimatedSplashOverlay />
-      <AppTabs />
-    </ThemeProvider>
+    <PlanProvider>
+      <StatusBar style="dark" />
+      <Stack
+        screenOptions={{
+          headerTintColor: colors.primary,
+          headerTitleStyle: { color: colors.text },
+          headerStyle: { backgroundColor: colors.bg },
+          headerShadowVisible: false,
+          contentStyle: { backgroundColor: colors.bg },
+          headerBackTitle: 'Tilbake',
+        }}>
+        <Stack.Screen name="index" options={{ title: 'Løpeplan' }} />
+        <Stack.Screen name="mal" options={{ title: 'Ditt mål' }} />
+        <Stack.Screen name="forslag" options={{ title: 'Forslag til plan' }} />
+        <Stack.Screen name="okt/[dato]" options={{ title: 'Økt' }} />
+      </Stack>
+    </PlanProvider>
   );
 }

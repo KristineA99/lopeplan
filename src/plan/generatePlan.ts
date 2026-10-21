@@ -109,8 +109,11 @@ function checkFeasibility(goal: Goal, start: string, weeksAvailable: number): Fe
     .reverse()
     .find((d) => d < goal.distanceKm && (weeksNeeded({ ...goal, distanceKm: d }) ?? Infinity) <= weeksAvailable);
 
-  let message = `Det er litt kort tid til å nå ${goal.distanceKm} km trygt. Vil du flytte datoen til ${suggestedDate}`;
-  message += suggestedDistanceKm ? `, eller sikte på ${suggestedDistanceKm} km først?` : '?';
+  const MONTHS = ['januar', 'februar', 'mars', 'april', 'mai', 'juni', 'juli', 'august', 'september', 'oktober', 'november', 'desember'];
+  const [y, m, d] = suggestedDate.split('-').map(Number);
+  const km = (n: number) => String(n).replace('.', ',');
+  let message = `Det er litt kort tid til å nå ${km(goal.distanceKm)} km trygt. Vil du flytte datoen til ${d}. ${MONTHS[m - 1]} ${y}`;
+  message += suggestedDistanceKm ? `, eller sikte på ${km(suggestedDistanceKm)} km først?` : '?';
 
   return { realistic: false, weeksAvailable, weeksNeeded: needed, suggestedDate, suggestedDistanceKm, message };
 }
