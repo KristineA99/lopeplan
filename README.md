@@ -66,9 +66,15 @@ Mange setter seg et løpemål, men vet ikke hvordan de skal trene for å nå det
 | F10 | Godkjente økter vises i en månedskalender med markering på treningsdager | Må |
 | F11 | Ulike økttyper har ulik farge/ikon i kalenderen | Bør |
 | F12 | Trykk på en dato viser detaljer: type, varighet/distanse, tempo eller intensitet, oppvarming, hoveddel, nedjogg og et kort tips | Må |
-| F13 | Brukeren kan markere en økt som fullført | Bør |
+| F13 | Brukeren kan markere en økt som fullført (se også F19) | Bør |
 | F14 | Brukeren kan flytte en økt til en annen dag | Kan |
-| F15 | Brukeren kan slette planen og starte på nytt | Må |
+| F15 | Brukeren kan slette planen og starte på nytt (ligger under Innstillinger, ikke på forsiden) | Må |
+| F16 | Brukeren kan velge hvilke ukedager de vil trene (2–6 dager). Appen foreslår dager ut fra nivå | Må |
+| F17 | Brukeren kan velge hvilke økttyper som skal være med: rolig (alltid med), langtur, bakker, tempo, intervall | Bør |
+| F18 | Brukeren kan endre, flytte og slette enkeltøkter både i forslaget og i godkjent plan | Bør |
+| F19 | Brukeren kan registrere en økt som *gjennomført som planlagt*, *gjennomført med endringer* (faktisk distanse, tid, følelse og notat) eller *hoppet over* | Bør |
+| F20 | Forsiden har både kalender og liste over alle økter, og et kort som viser neste økt | Må |
+| F21 | Viktige knapper (Lag plan, Godkjenn, Lagre) ligger alltid synlig nederst på skjermen | Bør |
 
 ### Ikke-funksjonelle krav
 
@@ -86,6 +92,20 @@ Mange setter seg et løpemål, men vet ikke hvordan de skal trene for å nå det
 ## Logikken bak treningsplanen
 
 Planen lages med **faste regler** basert på vanlige treningsprinsipper. Det trengs ikke AI i første versjon.
+
+Utregningen er forskjellig etter nivå:
+
+- **Nybegynnere** som ikke klarer å løpe 3 km sammenhengende starter med *gå/jogg målt i minutter*, og går over til km etter hvert.
+- **Litt trente og godt trente** planlegges etter *km per uke*, med et **tak** som passer for distansen og nivået. Har du allerede løpt langt, starter du nærmere taket, men du blir aldri bedt om å løpe mer enn taket.
+
+### Tak (toppen av oppbyggingen)
+
+| | 5 km | 10 km | Halvmaraton | Maraton |
+|---|---|---|---|---|
+| **Lengste langtur** – nybegynner / litt / godt trent | 5 / 8 / 12 | 10 / 13 / 16 | 18 / 19 / 22 | 30 / 30 / 32 |
+| **Ukevolum (km)** – nybegynner / litt / godt trent | 15 / 22 / 32 | 22 / 30 / 45 | 32 / 40 / 55 | 45 / 55 / 70 |
+
+I tillegg gjelder: rolige turer maks 14 km, harde økter maks 12 km, langtur maks 35 km. For egne distanser regnes det ut verdier mellom tabellverdiene. Selv godt trente starter på ca. 75 % av taket, så planen alltid har en oppbygging.
 
 ### 1. Startpunkt
 
@@ -157,6 +177,8 @@ Mål
   maldato
   maltid (valgfri)
   okter_per_uke (valgfri)
+  treningsdager (valgfri): [man … søn]
+  okttyper (valgfri): [rolig, langtur, bakke, tempo, intervall]
   niva: nybegynner | litt_trent | godt_trent
   lengste_tur_na_km (valgfri)
 
@@ -169,6 +191,10 @@ Treningsplan
 
 Økt
   dato
+  endret_av_bruker: ja/nei
+  registrering (valgfri):
+    status: som_planlagt | endret | hoppet_over
+    faktisk_distanse_km, faktisk_tid_min, følelse (lett/passe/tung), notat
   type: gaa_jogg | rolig | langtur | intervall | tempo | bakke | hvile
   distanse_km eller varighet_min
   tempo eller anstrengelse
@@ -199,21 +225,24 @@ Treningsplan
 | Rammeverk | **React Native med Expo** | Én kodebase for iOS og Android, enkel testing på egen telefon med Expo Go |
 | Språk | **TypeScript** | Fanger feil tidlig, og datamodellen blir tydelig |
 | Navigasjon | **Expo Router** | Filbasert navigasjon, følger med Expo-malen |
-| Kalender | **react-native-calendars** | Ferdig månedskalender med markering av datoer |
+| Kalender | **Egen komponent** (`MonthCalendar.tsx`) | Ingen ekstra pakker, full kontroll på farger og markering |
 | Lagring | **@react-native-async-storage/async-storage** | Lagrer planen lokalt på telefonen (N1, N5) |
-| Datovelger | **@react-native-community/datetimepicker** | Innebygd datovelger på iOS og Android |
 | Planlogikk | **Egen ren TypeScript-modul** (`src/plan/`) | Ingen avhengigheter til React Native, så den kan testes for seg selv |
 
 ### Mappestruktur
 
 ```text
-app/                       # Skjermer (Expo Router)
-  index.tsx                # Startside: "Lag ny plan" eller vis kalender
-  mal.tsx                  # Skjema for mål (F1–F6)
-  forslag.tsx              # Forhåndsvisning + Godkjenn/Endre (F8, F9)
-  kalender.tsx             # Månedskalender (F10, F11)
-  okt/[dato].tsx           # Detaljer for én økt (F12, F13)
 src/
+  app/                     # Skjermer (Expo Router)
+    _layout.tsx            # Navigasjon + felles plan-hukommelse
+    index.tsx              # Startside: velkomst, eller kalender/liste (F10, F11, F20)
+    mal.tsx                # Skjema for mål, dager og økttyper (F1–F6, F16, F17)
+    forslag.tsx            # Forhåndsvisning + Godkjenn/Endre mål (F7–F9)
+    okt/[dato].tsx         # Detaljer + registrering av økt (F12, F13, F19)
+    rediger/[id].tsx       # Endre/flytte/slette en økt (F14, F18)
+    innstillinger.tsx      # Endre mål, slette plan (F15)
+  components/              # Kalender, ukeliste, knapper, farger
+  state/PlanContext.tsx    # Lagrer planen på telefonen (AsyncStorage)
   plan/
     types.ts               # Datamodell
     dates.ts               # Datofunksjoner
@@ -221,7 +250,6 @@ src/
     generatePlan.ts        # Reglene som lager planen
     generatePlan.test.ts   # Tester for reglene
     demo.ts                # Skriver ut en eksempelplan i terminalen
-  storage.ts               # Lagre/hente plan med AsyncStorage
 ```
 
 ### Bruk av plan-generatoren
@@ -258,9 +286,9 @@ npx create-expo-app@latest lopeplan
 cd lopeplan
 
 # 2. Installer pakkene appen trenger
-npx expo install react-native-calendars @react-native-async-storage/async-storage @react-native-community/datetimepicker
+npx expo install @react-native-async-storage/async-storage
 
-# 3. Kopier inn src/plan/ fra dette repoet
+# 3. Erstatt src/-mappen med src/ fra dette repoet
 
 # 4. Start appen og skann QR-koden med Expo Go
 npx expo start
@@ -278,7 +306,7 @@ npx tsx src/plan/demo.ts                       # se en eksempelplan
 
 ## Videre utvikling
 
-- **Tilpasning underveis:** Planen justeres hvis brukeren hopper over økter eller markerer en økt som for tung/lett
+- **Tilpasning underveis:** Bruke registreringene (hoppet over, tung/lett) til å justere resten av planen automatisk
 - **Synk med telefonens kalender** (Google Calendar / iOS Kalender)
 - **Påminnelser** dagen før eller samme dag som en økt
 - **Import av treningsdata** fra Strava/Garmin for å anslå nivå automatisk
@@ -289,7 +317,6 @@ npx tsx src/plan/demo.ts                       # se en eksempelplan
 
 ## Åpne spørsmål
 
-- Skal brukeren kunne velge hvilke ukedager de vil trene?
 - Skal treningsnivå bestemmes med spørsmål (f.eks. "Hvor mange ganger løp du forrige uke?") i stedet for at brukeren velger selv?
 - Hva skjer hvis brukeren endrer målet midt i planen?
 
